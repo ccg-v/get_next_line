@@ -3,54 +3,57 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ccarrace <ccarrace@student.42barcel>       +#+  +:+       +#+        */
+/*   By: ccarrace <ccarrace@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 22:05:42 by ccarrace          #+#    #+#             */
-/*   Updated: 2022/10/14 16:32:21 by ccarrace         ###   ########.fr       */
+/*   Updated: 2023/08/15 21:17:51 by ccarrace         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static char	*ft_extract_remainder(char *depot)
+void	ft_free(char **str)
+{
+	free(*str);
+	*str = NULL;
+}
+
+static void	ft_extract_remainder(char **static_var)
 {
 	int		i;
 	char	*remainder;
 
 	i = 0;
-	while (depot[i] != '\n' && depot[i] != '\0')
+	while ((*static_var)[i] != '\n' && (*static_var)[i] != '\0')
 		i++;
-	if (depot[i] != '\0' && depot[i] == '\n')
+	if ((*static_var)[i] != '\0' && (*static_var)[i] == '\n')
 		i++;
-	remainder = ft_substr(depot, i, ft_strlen(depot) - i);
-	if (!remainder || *remainder == '\0')
-	{
-		free (remainder);
-		remainder = NULL;
-	}
-	return (remainder);
+	remainder = ft_substr(*static_var, i, ft_strlen(*static_var) - i);
+	free(*static_var);
+	*static_var = ft_strdup(remainder);
+	free (remainder);
+	remainder = NULL;
+	if (!*static_var || **static_var == '\0')
+		ft_free(static_var);
 }
 
-static char	*ft_extract_line(char *depot)
+static char	*ft_extract_line(char **static_var)
 {
 	int		i;
 	char	*line;
 
 	i = 0;
-	while (depot[i] != '\n' && depot[i] != '\0')
+	while ((*static_var)[i] != '\n' && (*static_var)[i] != '\0')
 		i++;
-	if (depot[i] != '\0' && depot[i] == '\n')
+	if ((*static_var)[i] != '\0' && (*static_var)[i] == '\n')
 		i++;
-	line = ft_substr(depot, 0, i);
+	line = ft_substr(*static_var, 0, i);
 	if (!line || *line == '\0')
-	{
-		free (line);
-		line = NULL;
-	}
+		ft_free(&line);
 	return (line);
 }
 
-static char	*ft_load_data(int fd, char *buffer, char *depot)
+static int	dump_data_into_static_var(int fd, char *buffer, char **static_var)
 {
 	int		bytes;
 	char	*temp;
@@ -60,29 +63,29 @@ static char	*ft_load_data(int fd, char *buffer, char *depot)
 	{
 		bytes = read(fd, buffer, BUFFER_SIZE);
 		if (bytes == -1)
+		{
+			ft_free(static_var); 
 			return (0);
+		}
 		else if (bytes == 0)
 			break ;
 		buffer[bytes] = '\0';
-		if (!depot)
-			depot = ft_strdup("");
-		temp = ft_strdup(depot);
-		free(depot);
-		depot = NULL;
-		depot = ft_strjoin(temp, buffer);
-		free(temp);
-		temp = NULL;
+		if (!(*static_var))
+			*static_var = ft_strdup("");
+		temp = ft_strdup(*static_var);
+		free(*static_var);
+		*static_var = ft_strjoin(temp, buffer);
+		ft_free(&temp);
 		if (ft_strchr (buffer, '\n'))
 			break ;
 	}
-	return (depot);
+	return (0);
 }
 
 char	*get_next_line(int fd)
 {
 	char		*buffer;
-	char static	*depot;
-	char		*store;
+	char static	*static_var;
 	char		*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
@@ -90,18 +93,16 @@ char	*get_next_line(int fd)
 	buffer = malloc((BUFFER_SIZE + 1) * sizeof (char));
 	if (!buffer)
 		return (NULL);
-	store = ft_load_data(fd, buffer, depot);
+	dump_data_into_static_var(fd, buffer, &static_var);
 	free(buffer);
 	buffer = NULL;
-	if (!store || *store == '\0')
+	line = NULL;
+	if (!static_var || (static_var && *static_var == '\0'))
 	{
-		free(depot);
-		depot = NULL;
+		ft_free(&static_var);
 		return (NULL);
 	}
-	line = ft_extract_line(store);
-	depot = ft_extract_remainder(store);
-	free (store);
-	store = NULL;
+	line = ft_extract_line(&static_var);
+	ft_extract_remainder(&static_var);
 	return (line);
 }
