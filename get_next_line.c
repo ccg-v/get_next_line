@@ -6,13 +6,13 @@
 /*   By: ccarrace <ccarrace@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/24 22:05:42 by ccarrace          #+#    #+#             */
-/*   Updated: 2023/08/15 21:17:51 by ccarrace         ###   ########.fr       */
+/*   Updated: 2023/08/16 00:05:17 by ccarrace         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-void	ft_free(char **str)
+static void	ft_free(char **str)
 {
 	free(*str);
 	*str = NULL;
@@ -94,8 +94,7 @@ char	*get_next_line(int fd)
 	if (!buffer)
 		return (NULL);
 	dump_data_into_static_var(fd, buffer, &static_var);
-	free(buffer);
-	buffer = NULL;
+	ft_free(&buffer);
 	line = NULL;
 	if (!static_var || (static_var && *static_var == '\0'))
 	{
