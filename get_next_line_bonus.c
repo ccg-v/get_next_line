@@ -3,105 +3,97 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ccarrace <ccarrace@student.42barcel>       +#+  +:+       +#+        */
+/*   By: ccarrace <ccarrace@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/09 22:45:02 by ccarrace          #+#    #+#             */
-/*   Updated: 2022/10/14 16:44:29 by ccarrace         ###   ########.fr       */
+/*   Updated: 2023/12/06 13:41:40 by ccarrace         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-static char	*ft_extract_remainder(char *depot)
+char	*extract_line_and_remainder(char **static_var)
 {
-	int		i;
-	char	*remainder;
-
-	i = 0;
-	while (depot[i] != '\n' && depot[i] != '\0')
-		i++;
-	if (depot[i] != '\0' && depot[i] == '\n')
-		i++;
-	remainder = ft_substr(depot, i, ft_strlen(depot) - i);
-	if (!remainder || *remainder == '\0')
-	{
-		free (remainder);
-		remainder = NULL;
-	}
-	return (remainder);
-}
-
-static char	*ft_extract_line(char *depot)
-{
-	int		i;
 	char	*line;
+	char	*remainder;
+	int		i;
 
 	i = 0;
-	while (depot[i] != '\n' && depot[i] != '\0')
+	while ((*static_var)[i] != '\n' && (*static_var)[i] != '\0')
 		i++;
-	if (depot[i] != '\0' && depot[i] == '\n')
+	if ((*static_var)[i] == '\n' && (*static_var)[i] != '\0')
 		i++;
-	line = ft_substr(depot, 0, i);
+	line = ft_substr(*static_var, 0, i);
 	if (!line || *line == '\0')
-	{
-		free(line);
-		line = NULL;
-	}
+		return (ft_free(&line));
+	remainder = ft_substr(*static_var, i, ft_strlen(*static_var) - i);
+	free(*static_var);
+	*static_var = remainder;
 	return (line);
 }
 
-static char	*ft_load_data(int fd, char *buffer, char *depot)
+char	*dump_data_into_static_var(int fd, char *static_var)
 {
-	int		bytes;
+	char	*buffer;
 	char	*temp;
+	int		bytes;
 
+	buffer = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char));
+	if (!buffer)
+		return (ft_free(&static_var));
+	*buffer = '\0';
 	bytes = 1;
-	while (bytes)
+	while (bytes > 0 && !ft_strchr(buffer, '\n'))
 	{
 		bytes = read(fd, buffer, BUFFER_SIZE);
 		if (bytes == -1)
-			return (0);
-		else if (bytes == 0)
-			break ;
+		{
+			free(buffer);
+			return (ft_free(&static_var));
+		}
 		buffer[bytes] = '\0';
-		if (!depot)
-			depot = ft_strdup("");
-		temp = ft_strdup(depot);
-		free(depot);
-		depot = NULL;
-		depot = ft_strjoin(temp, buffer);
-		free(temp);
-		temp = NULL;
-		if (ft_strchr (buffer, '\n'))
-			break ;
+		temp = ft_strjoin(static_var, buffer);
+		static_var = temp;
 	}
-	return (depot);
+	if (buffer)
+		free(buffer);
+	return (static_var);
 }
 
 char	*get_next_line(int fd)
 {
-	char		*buffer;
-	char static	*depot[OPEN_MAX];
-	char		*store;
+	static char	*static_var[OPEN_MAX];
 	char		*line;
 
-	if (fd < 0 || fd > OPEN_MAX || BUFFER_SIZE <= 0)
+	if (fd < 0 || fd > OPEN_MAX || BUFFER_SIZE < 1)
 		return (NULL);
-	buffer = malloc((BUFFER_SIZE + 1) * sizeof (char));
-	if (!buffer)
-		return (NULL);
-	store = ft_load_data(fd, buffer, depot[fd]);
-	free(buffer);
-	buffer = NULL;
-	if (!store || *store == '\0')
-	{
-		free (depot[fd]);
-		depot[fd] = NULL;
-		return (NULL);
-	}
-	line = ft_extract_line(store);
-	depot[fd] = ft_extract_remainder(store);
-	free (store);
-	store = NULL;
+	static_var[fd] = dump_data_into_static_var(fd, static_var[fd]);
+	if (!static_var[fd] || *static_var[fd] == '\0')
+		return (ft_free(&static_var[fd]));
+	line = extract_line_and_remainder(&static_var[fd]);
+	if (!line)
+		return (ft_free(&static_var[fd]));
 	return (line);
 }
+/*
+int	main(int argc, char **argv)
+{
+	int		fd;
+	char	*line;
+
+	if (argc != 2)
+	{
+		printf("Wrong args!\n");
+		return (1);
+	}
+	fd = open(argv[1], O_RDONLY);
+	line = "";
+	while (line != NULL)
+	{
+		line = get_next_line(fd);
+		printf("%s", line);
+		free(line);
+	}
+	fd = close(fd);
+	return (0);
+}*/

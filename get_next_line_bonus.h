@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_bonus.h                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ccarrace <ccarrace@student.42barcel>       +#+  +:+       +#+        */
+/*   By: ccarrace <ccarrace@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/09 22:47:37 by ccarrace          #+#    #+#             */
-/*   Updated: 2022/10/09 23:15:17 by ccarrace         ###   ########.fr       */
+/*   Updated: 2023/12/06 13:38:13 by ccarrace         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,10 @@
 
 char	*get_next_line(int fd);
 
-size_t	ft_strlen(char *str);
-char	*ft_strdup(char *s1);
-char	*ft_strchr(char *s, int c);
-char	*ft_strjoin(char *s1, char *s2);
-char	*ft_substr(char *s, unsigned int start, size_t len);
+void	*ft_free(char **str);
+int		ft_strlen(char *str);
+char	*ft_strchr(char *str, int c);
+char	*ft_strjoin(char *str1, char *str2);
+char	*ft_substr(char *str, int start, int len);
 
 #endif
